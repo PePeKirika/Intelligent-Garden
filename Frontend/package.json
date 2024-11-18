@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "create-next-app": "^13.4.16",
+    "firebase": "^11.0.2",
+    "next": "13.4.16"
+  },
+  "scripts": {
+    "dev": "next dev"
+  }
+}
