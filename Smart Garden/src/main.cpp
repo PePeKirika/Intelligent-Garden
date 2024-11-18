@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <softwareSerial.h>
 #if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA)
 #include <WiFi.h>
 #elif defined(ESP8266)
@@ -16,6 +17,11 @@
 #endif
 
 #include <FirebaseClient.h>
+#include "DHT.h"
+#define DHT_PIN 15
+#define DHT_TYPE DHT11 
+
+DHT dht(DHT_PIN, DHT_TYPE);
 
 #define WIFI_SSID "POCO F5"
 #define WIFI_PASSWORD "123456aA"
@@ -53,10 +59,16 @@ AsyncResult aResult_no_callback;
 
 bool taskComplete = false;
 
+#define RXp2 22
+#define TXp2 23
+
+SoftwareSerial mySerial(RXp2, TXp2);
+
 void setup()
 {
 
     Serial.begin(115200);
+    mySerial.begin(9600);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     Serial.print("Connecting to Wi-Fi");
@@ -83,75 +95,79 @@ void setup()
 
     initializeApp(aClient, app, getAuth(user_auth), aResult_no_callback);
 
-    // Binding the FirebaseApp for authentication handler.
-    // To unbind, use Database.resetApp();
     app.getApp<RealtimeDatabase>(Database);
 
     Database.url(DATABASE_URL);
+    
 }
 
 unsigned long ms = 0;
-
+float Temperature, Humidity;
 void loop()
 {
-    // The async task handler should run inside the main loop
-    // without blocking delay or bypassing with millis code blocks.
-
     app.loop();
 
     Database.loop();
 
-    if (millis() - ms > 20000 || ms == 0)
+
+    if (millis() - ms > 10000 || ms == 0)
     {
         ms = millis();
-        taskComplete = true;
+        Temperature = dht.readTemperature();
+        Serial.println("Temperature:"+String(Temperature));
+        Humidity = dht.readHumidity();
+        Serial.println("Humidity:"+String(Humidity));
+        while (mySerial.available() > 0) {
+            String key = mySerial.readStringUntil('\n');
+            key.trim();
+            Serial.println(key);
 
-        Serial.println("Asynchronous Set... ");
+            if (key == "=") {
+                String soil_moisture_str = mySerial.readStringUntil('\n');
+                soil_moisture_str.trim();
 
-        // Set int
-        Database.set<int>(aClient, "/test/int", 12345, aResult_no_callback);
+                String ldr_str = mySerial.readStringUntil('\n');
+                ldr_str.trim();
 
-        // Set bool
-        Database.set<bool>(aClient, "/test/bool", true, aResult_no_callback);
+                String motor_str = mySerial.readStringUntil('\n');
+                motor_str.trim();
 
-        // Set string
-        Database.set<String>(aClient, "/test/string", "hello", aResult_no_callback);
+                if (!soil_moisture_str.isEmpty() && soil_moisture_str.toInt() > 0) {
+                    int soil_moisture = soil_moisture_str.toInt();
+                    Serial.println("soil_moisture: " + String(soil_moisture));
+                    Database.set<int>(aClient, "/plant1/soil_moisture", soil_moisture, aResult_no_callback);
+                } else {
+                    Serial.println("Invalid soil moisture data: " + soil_moisture_str);
+                }
+                if (!ldr_str.isEmpty() && ldr_str.toInt() > 0) {
+                    int ldr = ldr_str.toInt();
+                    Serial.println("ldr: " + String(ldr));
+                    Database.set<int>(aClient, "/plant1/light", ldr, aResult_no_callback);
+                } else {
+                    Serial.println("Invalid LDR data: " + ldr_str);
+                }
+                if (!motor_str.isEmpty() && motor_str.toInt() >= 0) {
+                    int motor = motor_str.toInt();
+                    Serial.println("motor: " + String(motor));
+                    Database.set<bool>(aClient, "/plant1/pump", motor, aResult_no_callback);
+                } else {
+                    Serial.println("Invalid motor data: " + motor_str);
+                }
+            } else {
+                Serial.println("Unexpected key: " + key);
+            }
+        }
 
-        // Set json
-        Database.set<object_t>(aClient, "/test/json", object_t("{\"data\":123}"), aResult_no_callback);
 
-        // Library does not provide JSON parser library, the following JSON writer class will be used with
-        // object_t for simple demonstration.
-
-        object_t json, obj1, obj2, obj3, obj4;
+        object_t ts_json;
         JsonWriter writer;
-
-        writer.create(obj1, "int/value", 9999);
-        writer.create(obj2, "string/value", string_t("hello"));
-        writer.create(obj3, "float/value", number_t(123.456, 2));
-        writer.join(obj4, 3 /* no. of object_t (s) to join */, obj1, obj2, obj3);
-        writer.create(json, "node/list", obj4);
-
-        // To print object_t
-        // Serial.println(json);
-
-        Database.set<object_t>(aClient, "/test/json", json, aResult_no_callback);
-
-        object_t arr;
-        arr.initArray(); // initialize to be used as array
-        writer.join(arr, 4 /* no. of object_t (s) to join */, object_t("[12,34]"), object_t("[56,78]"), object_t(string_t("steve")), object_t(888));
-
-        // Note that value that sets to object_t other than JSON ({}) and Array ([]) can be valid only if it
-        // used as array member value as above i.e. object_t(string_t("steve")) and object_t(888).
-
-        // Set array
-        Database.set<object_t>(aClient, "/test/arr", arr, aResult_no_callback);
-
-        // Set float
-        Database.set<number_t>(aClient, "/test/float", number_t(123.456, 2), aResult_no_callback);
-
-        // Set double
-        Database.set<number_t>(aClient, "/test/double", number_t(1234.56789, 4), aResult_no_callback);
+        writer.create(ts_json, ".sv", "timestamp"); // -> {".sv": "timestamp"}
+        Database.set<object_t>(aClient, "/plant1/timestamp", ts_json);
+        Database.set<number_t>(aClient, "/plant1/temperature", number_t(Temperature, 2), aResult_no_callback);
+        Database.set<number_t>(aClient, "/plant1/humidity", number_t(Humidity, 2), aResult_no_callback);
+        
+        
+        
     }
 
     printResult(aResult_no_callback);
