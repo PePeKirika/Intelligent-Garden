@@ -18,11 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Function to format sensor values
-function formatValue(value, decimals = 2) {   
-    return Number(value).toFixed(decimals);
-}
-
 // Utility function to safely update DOM elements
 function updateElementById(id, value) {
     const element = document.getElementById(id);
@@ -41,20 +36,6 @@ function formatTimestamp(timestamp) {
     return date.toLocaleString();
 }
 
-// // Reference to plant1 data and listen for changes
-// const plant1Ref = ref(db, 'plant1');
-// onValue(plant1Ref, (snapshot) => {
-//     const data = snapshot.val();
-//     if (data) {
-//       // Update the data on the page
-//       document.getElementById('humidity').textContent = data.humidity + '%';
-//       document.getElementById('light').textContent = data.light + ' lx';
-//       document.getElementById('temperature').textContent = data.temperature + '°C';
-//       document.getElementById('soilMoisture').textContent = data.soil_moisture + '%';
-//       document.getElementById('pump').textContent = data.pump ? 'ON' : 'OFF';
-//       document.getElementById('timestamp').textContent = formatTimestamp(data.timestamp);
-//     }
-// })
 
 // Reference to plant1 data and listen for changes
 const plant1Ref = ref(db, 'plant1');
@@ -72,7 +53,7 @@ onValue(plant1Ref, (snapshot) => {
         updateElementById('humidity', `${data.humidity}%`);
         updateElementById('light', `${data.light} lx`);
         updateElementById('temperature', `${data.temperature}°C`);
-        updateElementById('soilMoisture', `${data.soil_moisture}%`);
+        updateElementById('soilMoisture', `${100 - data.soil_moisture}%`);
         updateElementById('pump', data.pump ? 'ON' : 'OFF');
         updateElementById('timestamp', formatTimestamp(data.timestamp));
     } catch (error) {
