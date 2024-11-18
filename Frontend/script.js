@@ -3,14 +3,14 @@ import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/9.
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDwtWZoYqI0IP-pYbD6tQh00kAw3bjxP3E",
-    authDomain: "embeded-7133f.firebaseapp.com",
-    databaseURL: "https://embeded-7133f-default-rtdb.asia-southeast1.firebasedatabase.app/",
-    projectId: "embeded-7133f",
-    storageBucket: "embeded-7133f.firebasestorage.app",
-    messagingSenderId: "745177536234",
-    appId: "1:745177536234:web:d262da8f34f0239a12a993",
-    measurementId: "G-BQDV23KK7B"
+    apiKey: "AIzaSyAm0lVR4SRAn2Roj2cixoVWpt3jjmBiLRY",
+    authDomain: "awesomeplantwateringdb.firebaseapp.com",
+    databaseURL: "https://awesomeplantwateringdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "awesomeplantwateringdb",
+    storageBucket: "awesomeplantwateringdb.firebasestorage.app",
+    messagingSenderId: "846024263616",
+    appId: "1:846024263616:web:21bcd9b9a9b88a38c9aa25",
+    measurementId: "G-6Y3X3HPEQD"
   };
   
 
@@ -72,7 +72,7 @@ onValue(plant1Ref, (snapshot) => {
         updateElementById('humidity', `${data.humidity}%`);
         updateElementById('light', `${data.light} lx`);
         updateElementById('temperature', `${data.temperature}°C`);
-        updateElementById('soilMoisture', `${data.soil_moisture}%`);
+        updateElementById('soilMoisture', `${100-data.soil_moisture}%`);
         updateElementById('pump', data.pump ? 'ON' : 'OFF');
         updateElementById('timestamp', formatTimestamp(data.timestamp));
     } catch (error) {
