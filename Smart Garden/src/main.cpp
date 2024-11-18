@@ -1,18 +1,181 @@
 #include <Arduino.h>
+#if defined(ESP32) || defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA)
+#include <WiFi.h>
+#elif defined(ESP8266)
+#include <ESP8266WiFi.h>
+#elif __has_include(<WiFiNINA.h>) || defined(ARDUINO_NANO_RP2040_CONNECT)
+#include <WiFiNINA.h>
+#elif __has_include(<WiFi101.h>)
+#include <WiFi101.h>
+#elif __has_include(<WiFiS3.h>) || defined(ARDUINO_UNOWIFIR4)
+#include <WiFiS3.h>
+#elif __has_include(<WiFiC3.h>) || defined(ARDUINO_PORTENTA_C33)
+#include <WiFiC3.h>
+#elif __has_include(<WiFi.h>)
+#include <WiFi.h>
+#endif
 
-// put function declarations here:
-int myFunction(int, int);
+#include <FirebaseClient.h>
 
-void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+#define WIFI_SSID "POCO F5"
+#define WIFI_PASSWORD "123456aA"
+
+#define API_KEY "AIzaSyDwtWZoYqI0IP-pYbD6tQh00kAw3bjxP3E"
+
+#define USER_EMAIL "smartgarden@garden.com"
+#define USER_PASSWORD "123456"
+
+#define DATABASE_URL "https://embeded-7133f-default-rtdb.asia-southeast1.firebasedatabase.app//"
+
+void printResult(AsyncResult &aResult);
+
+DefaultNetwork network; // initilize with boolean parameter to enable/disable network reconnection
+
+UserAuth user_auth(API_KEY, USER_EMAIL, USER_PASSWORD);
+
+FirebaseApp app;
+
+#if defined(ESP32) || defined(ESP8266) || defined(ARDUINO_RASPBERRY_PI_PICO_W)
+#include <WiFiClientSecure.h>
+WiFiClientSecure ssl_client;
+#elif defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_UNOWIFIR4) || defined(ARDUINO_GIGA) || defined(ARDUINO_OPTA) || defined(ARDUINO_PORTENTA_C33) || defined(ARDUINO_NANO_RP2040_CONNECT)
+#include <WiFiSSLClient.h>
+WiFiSSLClient ssl_client;
+#endif
+
+using AsyncClient = AsyncClientClass;
+
+AsyncClient aClient(ssl_client, getNetwork(network));
+
+RealtimeDatabase Database;
+
+AsyncResult aResult_no_callback;
+
+bool taskComplete = false;
+
+void setup()
+{
+
+    Serial.begin(115200);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+    Serial.print("Connecting to Wi-Fi");
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        Serial.print(".");
+        delay(300);
+    }
+    Serial.println();
+    Serial.print("Connected with IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.println();
+
+    Firebase.printf("Firebase Client v%s\n", FIREBASE_CLIENT_VERSION);
+
+    Serial.println("Initializing app...");
+
+#if defined(ESP32) || defined(ESP8266) || defined(PICO_RP2040)
+    ssl_client.setInsecure();
+#if defined(ESP8266)
+    ssl_client.setBufferSizes(4096, 1024);
+#endif
+#endif
+
+    initializeApp(aClient, app, getAuth(user_auth), aResult_no_callback);
+
+    // Binding the FirebaseApp for authentication handler.
+    // To unbind, use Database.resetApp();
+    app.getApp<RealtimeDatabase>(Database);
+
+    Database.url(DATABASE_URL);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+unsigned long ms = 0;
+
+void loop()
+{
+    // The async task handler should run inside the main loop
+    // without blocking delay or bypassing with millis code blocks.
+
+    app.loop();
+
+    Database.loop();
+
+    if (millis() - ms > 20000 || ms == 0)
+    {
+        ms = millis();
+        taskComplete = true;
+
+        Serial.println("Asynchronous Set... ");
+
+        // Set int
+        Database.set<int>(aClient, "/test/int", 12345, aResult_no_callback);
+
+        // Set bool
+        Database.set<bool>(aClient, "/test/bool", true, aResult_no_callback);
+
+        // Set string
+        Database.set<String>(aClient, "/test/string", "hello", aResult_no_callback);
+
+        // Set json
+        Database.set<object_t>(aClient, "/test/json", object_t("{\"data\":123}"), aResult_no_callback);
+
+        // Library does not provide JSON parser library, the following JSON writer class will be used with
+        // object_t for simple demonstration.
+
+        object_t json, obj1, obj2, obj3, obj4;
+        JsonWriter writer;
+
+        writer.create(obj1, "int/value", 9999);
+        writer.create(obj2, "string/value", string_t("hello"));
+        writer.create(obj3, "float/value", number_t(123.456, 2));
+        writer.join(obj4, 3 /* no. of object_t (s) to join */, obj1, obj2, obj3);
+        writer.create(json, "node/list", obj4);
+
+        // To print object_t
+        // Serial.println(json);
+
+        Database.set<object_t>(aClient, "/test/json", json, aResult_no_callback);
+
+        object_t arr;
+        arr.initArray(); // initialize to be used as array
+        writer.join(arr, 4 /* no. of object_t (s) to join */, object_t("[12,34]"), object_t("[56,78]"), object_t(string_t("steve")), object_t(888));
+
+        // Note that value that sets to object_t other than JSON ({}) and Array ([]) can be valid only if it
+        // used as array member value as above i.e. object_t(string_t("steve")) and object_t(888).
+
+        // Set array
+        Database.set<object_t>(aClient, "/test/arr", arr, aResult_no_callback);
+
+        // Set float
+        Database.set<number_t>(aClient, "/test/float", number_t(123.456, 2), aResult_no_callback);
+
+        // Set double
+        Database.set<number_t>(aClient, "/test/double", number_t(1234.56789, 4), aResult_no_callback);
+    }
+
+    printResult(aResult_no_callback);
 }
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+void printResult(AsyncResult &aResult)
+{
+    if (aResult.isEvent())
+    {
+        Firebase.printf("Event task: %s, msg: %s, code: %d\n", aResult.uid().c_str(), aResult.appEvent().message().c_str(), aResult.appEvent().code());
+    }
+
+    if (aResult.isDebug())
+    {
+        Firebase.printf("Debug task: %s, msg: %s\n", aResult.uid().c_str(), aResult.debug().c_str());
+    }
+
+    if (aResult.isError())
+    {
+        Firebase.printf("Error task: %s, msg: %s, code: %d\n", aResult.uid().c_str(), aResult.error().message().c_str(), aResult.error().code());
+    }
+
+    if (aResult.available())
+    {
+        Firebase.printf("task: %s, payload: %s\n", aResult.uid().c_str(), aResult.c_str());
+    }
 }
