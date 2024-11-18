@@ -1,7 +1,6 @@
 'use client'
 import { database } from "../app/lib/firebase";
 import { ref, set, onValue, child } from "firebase/database";
-import { get } from "http";
 import { useState, useEffect } from "react";
 
 const Home = () => {
