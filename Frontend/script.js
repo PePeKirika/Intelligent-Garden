@@ -38,7 +38,7 @@ function formatTimestamp(timestamp) {
 
 
 // Reference to plant1 data and listen for changes
-const plant1Ref = ref(db, 'plant1');
+const plant1Ref = ref(db, 'garden_database');
 onValue(plant1Ref, (snapshot) => {
     try {
         const data = snapshot.val();
