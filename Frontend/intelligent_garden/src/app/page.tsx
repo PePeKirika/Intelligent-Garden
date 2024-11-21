@@ -33,7 +33,7 @@ const handleOnSheetDataClick = async () => {
     try {
       pots.map(async (pot: any, index: any) => {
         const pumpState = pot.pump ? "ON" : "OFF";
-        await appendData(humidity,light,pot.soil_moisture,temperature,pumpState,timestamp,index);
+        await appendData(humidity,light,pot.soil_moisture,temperature,pumpState,timestamp,index.toString());
         console.log(index);
       })
       alert("Data written to Google Sheets!");
