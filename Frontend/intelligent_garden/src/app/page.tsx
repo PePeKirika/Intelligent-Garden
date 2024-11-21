@@ -45,6 +45,7 @@ const handleOnSheetDataClick = async () => {
 
   return (
     <main className="font-sans bg-gradient-to-br from-indigo-900 via-red-700 to-yellow-400 text-gray-800 min-h-screen leading-relaxed antialiased overflow-x-hidden">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
       <div id="particles-js" className="fixed top-0 left-0 w-full h-full z-10"></div>
 
       <div className="content relative z-20 p-5 flex flex-col items-center min-h-screen">
