@@ -50,11 +50,11 @@ const handleOnSheetDataClick = async () => {
 
       <div className="content relative z-20 p-5 flex flex-col items-center min-h-screen">
         <div id="main-system" className="w-full text-center">
-          <h1 className="mb-8 text-white text-4xl font-bold text-shadow-md">
+          <h1 className="mb-8 mt-5 text-white text-6xl font-bold text-shadow-md">
             Intelligent Garden
           </h1>
 
-          <div className="text-white" id="timestamp">
+          <div className="text-white mb-4" id="timestamp">
             <h2 className="text-xl">
               Timestamp <i className="fas fa-clock"></i>
             </h2>
@@ -85,7 +85,7 @@ const handleOnSheetDataClick = async () => {
                 Temperature <i className="fas fa-thermometer-half text-red-500"></i>
               </h2>
               <p className="text-2xl text-gray-600 font-semibold">
-                <span id="temperature">{temperature ?? '--'}</span>
+                <span id="temperature">{temperature ?? '--'}°C</span>
               </p>
             </div>
           </div>
@@ -102,7 +102,7 @@ const handleOnSheetDataClick = async () => {
                     Soil Moisture <i className="fas fa-seedling"></i>
                   </h2>
                   <p className="text-xl text-gray-600 font-semibold">
-                    <span id={`soilMoisture_${index}`}>{pot.soil_moisture}</span>
+                    <span id={`soilMoisture_${index}`}>{100 - pot.soil_moisture}%</span>
                   </p>
                 </div>
 
