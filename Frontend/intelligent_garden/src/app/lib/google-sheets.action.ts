@@ -25,7 +25,7 @@ export async function appendData(humidity: number, light: number, soilMoisture: 
         requestBody: {
             values: [
                 [
-                    pot, timestamp, humidity, light, soilMoisture, temperature, pumpState
+                    pot, timestamp, humidity, light, 100-soilMoisture, temperature, pumpState
                 ],
             ]
         }

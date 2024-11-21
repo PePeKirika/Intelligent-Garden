@@ -135,7 +135,7 @@ void loop()
                 if (!soil_moisture_str.isEmpty() && soil_moisture_str.toInt() > 0) {
                     int soil_moisture = soil_moisture_str.toInt();
                     Serial.println("soil_moisture: " + String(soil_moisture));
-                    Database.set<int>(aClient, "/garden_database/soil_moisture", soil_moisture, aResult_no_callback);
+                    Database.set<int>(aClient, "/garden_database/pots/1/soil_moisture", soil_moisture, aResult_no_callback);
                 } else {
                     Serial.println("Invalid soil moisture data: " + soil_moisture_str);
                 }
@@ -149,7 +149,7 @@ void loop()
                 if (!motor_str.isEmpty() && motor_str.toInt() >= 0) {
                     int motor = motor_str.toInt();
                     Serial.println("motor: " + String(motor));
-                    Database.set<bool>(aClient, "/garden_database/pump", motor, aResult_no_callback);
+                    Database.set<bool>(aClient, "/garden_database/pots/1/pump", motor, aResult_no_callback);
                 } else {
                     Serial.println("Invalid motor data: " + motor_str);
                 }
