@@ -1,6 +1,7 @@
 int sensorPin = A0;
 int Relay1 = 4;
 int ldrPin = A2;
+const float ADC_RESOLUTION = 5.0 / 1024.0;
 
 unsigned long lastSerialTime = 0; // ตัวแปรสำหรับเก็บเวลา
 
@@ -20,7 +21,7 @@ void loop() {
   // อ่านค่าจากเซ็นเซอร์
   sensorValue = analogRead(sensorPin);
   sensorValue = map(sensorValue, 0, 1023, 0, 100);
-  ldrValue = analogRead(ldrPin);
+  ldrValue = (250 / (ADC_RESOLUTION * analogRead(ldrPin))) - 50;
 
   // ตรวจสอบเงื่อนไขการควบคุม Relay
   if (sensorValue > 50) {
