@@ -49,23 +49,23 @@ const handleOnSheetDataClick = async () => {
 
 const handleSpeechToText = (text : string) => {
   if (text.toLocaleLowerCase().includes("ight") || text.includes("แสง")) {
-    textToSpeech("The light value is " + light);
-    alert("The light value is " + light);
+    textToSpeech("The light value is " + light + "lux");
+    alert("The light value is " + light + " lx");
   } else if(text.toLocaleLowerCase().includes("temperature") || text.includes("อุณหภูมิ")) {
     textToSpeech("The temperature is " + temperature + "degrees Celsius");
     alert("The temperature is " + temperature + "°C");
   } else if(text.toLocaleLowerCase().includes("time") || text.includes("เวลา")) {
     textToSpeech("The timestamp is " + timestamp);
     alert("The timestamp is " + timestamp);
-  } else if (text.toLocaleLowerCase().includes("soil") || text.includes("ดิน")) {
+  } else if (text.toLocaleLowerCase().includes("soil") || text.toLocaleLowerCase().includes("moisture") || text.includes("ดิน")) {
     textToSpeech(`The soil moisture value of pot 1 is ${100 - pots[1].soil_moisture} percent`);
     alert(`The soil moisture value of pot 1 is ${100 - pots[1].soil_moisture}%`);
   } else if (text.toLocaleLowerCase().includes("pump") || text.includes("ปั๊ม")) {
     textToSpeech(`The pump state of pot 1 is ${pots[1].pump ? "ON" : "OFF"}`);
     alert(`The pump state of pot 1 is ${pots[1].pump ? "ON" : "OFF"}`);
   } else if(text.toLocaleLowerCase().includes("humidity") || text.includes("ชื้น")) {
-    textToSpeech("The humidity is " + humidity);
-    alert("The humidity is " + humidity);
+    textToSpeech("The humidity is " + humidity + "percent");
+    alert("The humidity is " + humidity + "%");
   } else {
     alert("Sorry, I didn't get that. Please try again.");
   }
@@ -104,7 +104,7 @@ const textToSpeech = (text : string) => {
                 Air Humidity <i className="fas fa-wind text-blue-500"></i>
               </h2>
               <p className="text-2xl text-gray-600 font-semibold">
-                <span id="humidity">{humidity ?? '--'}</span>
+                <span id="humidity">{humidity ?? '--'}%</span>
               </p>
             </div>
 
@@ -113,7 +113,7 @@ const textToSpeech = (text : string) => {
                 Light <i className="fas fa-lightbulb text-yellow-400"></i>
               </h2>
               <p className="text-2xl text-gray-600 font-semibold">
-                <span id="light">{light ?? '--'}</span>
+                <span id="light">{light ?? '--'} lx</span>
               </p>
             </div>
 
